@@ -313,5 +313,176 @@ source("https://gist.githubusercontent.com/benmarwick/2a1bb0133ff568cbe28d/raw/f
         scale_colour_manual(values = c("#5A4A6F", "#E47250",  "#EBB261", "#9D5A6C")) +
         theme_niwot())
 
-ggsave(distributions5, filename = "distributions5.png",
+ggsave(distributions5, filename = "Output/combo_rain_violin5.png",
+       height = 5, width = 5)
+
+# Flipping x and y axis 
+
+(distributions6 <- 
+        ggplot(data = niwot_richness, 
+               aes(x = reorder(fert, desc(richness)), y = richness, fill = fert)) +
+        geom_flat_violin(position = position_nudge(x = 0.2, y = 0), alpha = 0.8) +
+        geom_point(aes(y = richness, color = fert), 
+                   position = position_jitter(width = 0.15), size = 1, alpha = 0.1) +
+        geom_boxplot(width = 0.2, outlier.shape = NA, alpha = 0.8) +
+        labs(y = "\nSpecies richness", x = NULL) +
+        guides(fill = FALSE, color = FALSE) +
+        scale_y_continuous(limits = c(0, 30)) +
+        scale_fill_manual(values = c("#5A4A6F", "#E47250",  "#EBB261", "#9D5A6C")) +
+        scale_colour_manual(values = c("#5A4A6F", "#E47250",  "#EBB261", "#9D5A6C")) +
+        coord_flip() +
+        theme_niwot())
+
+ggsave(distributions6, filename = "Output/flip_rain_violin6.png",
+       height = 5, width = 5)
+
+
+# Using case_when() combined with mutate() to create new variables based  on one 
+## or more conditions from other variables 
+
+# Create new columns based on a combo of conditions using case_when()
+# A fictional example
+
+alpine_magic <- niwot_richness %>% mutate(fairy_dust = case_when(fert == "PP" & hits > 5 ~ "Blue fairy dust",
+                                                                 fert == "CC" & hits > 15 ~ "The ultimate fairy dust"))
+
+(distributions_magic <- 
+        ggplot(data = alpine_magic, 
+               aes(x = reorder(fairy_dust, desc(richness)), y = richness, fill = fairy_dust)) +
+        geom_flat_violin(position = position_nudge(x = 0.2, y = 0), alpha = 0.8) +
+        geom_point(aes(y = richness, color = fairy_dust), 
+                   position = position_jitter(width = 0.15), size = 1, alpha = 0.1) +
+        geom_boxplot(width = 0.2, outlier.shape = NA, alpha = 0.8) +
+        labs(y = "\nSpecies richness", x = NULL) +
+        guides(fill = FALSE, color = FALSE) +
+        scale_y_continuous(limits = c(0, 30)) +
+        scale_fill_manual(values = c("turquoise4", "magenta4")) +
+        scale_colour_manual(values = c("turquoise4", "magenta4")) +
+        coord_flip() +
+        theme_niwot())
+
+ggsave(distributions_magic, filename = "Output/new_var_magic1.png",
+       height = 5, width = 5)
+
+# Using drop_na() to specify which specific column should be the evaluator, 
+## and drop missing values
+
+alpine_magic_only <- alpine_magic %>% drop_na(fairy_dust) # here, fairy dust is the evaluator
+
+(distributions_magic2 <- 
+        ggplot(data = alpine_magic_only, 
+               aes(x = reorder(fairy_dust, desc(richness)), y = richness, fill = fairy_dust)) +
+        geom_flat_violin(position = position_nudge(x = 0.2, y = 0), alpha = 0.8) +
+        geom_point(aes(y = richness, color = fairy_dust), 
+                   position = position_jitter(width = 0.15), size = 1, alpha = 0.1) +
+        geom_boxplot(width = 0.2, outlier.shape = NA, alpha = 0.8) +
+        labs(y = "\nSpecies richness", x = NULL) +
+        guides(fill = FALSE, color = FALSE) +
+        scale_y_continuous(limits = c(0, 30)) +
+        scale_fill_manual(values = c("turquoise4", "magenta4")) +
+        scale_colour_manual(values = c("turquoise4", "magenta4")) +
+        coord_flip() +
+        theme_niwot())
+
+ggsave(distributions_magic2, filename = "Output/filtered_na_magic2.png",
+       height = 5, width = 5)
+
+
+# Make, customise and annotate histograms---- 
+
+# Using the tally() function combned with group_by() creates summary of how many 
+## observations there are in different categories in my data
+
+# Calculate number of data records per plot per year
+
+observations <- niwot_plant_exp %>% group_by(USDA_Scientific_Name) %>%
+    tally() %>% arrange(desc(n))  # rearanging the data frame so that the most common species are first
+
+
+# Filtering for plant species records from the Carex family 
+
+# Filtering out just Carex species
+carex <- niwot_plant_exp %>%
+    filter(str_detect(USDA_Scientific_Name, pattern = "Carex"))
+
+# Making histogram for Carex distribution 
+
+(histogram1 <- ggplot(carex, aes(x = hits)) +
+        geom_histogram())
+
+ggsave(histogram1, filename = "Output/hist_carex.png",
+       height = 5, width = 5)
+
+# Making prettier histogram for Carex species
+
+(histogram2 <- ggplot(carex, aes(x = hits)) +
+        geom_histogram(alpha = 0.6, 
+                       breaks = seq(0, 100, by = 3),
+                       # Choosing a Carex-like colour
+                       fill = "seagreen4") +
+        theme_niwot())
+
+ggsave(histogram2, filename = "Output/colour_hist2.png",
+       height = 5, width = 5)
+
+# Remove empty space 
+
+(histogram3 <- ggplot(carex, aes(x = hits)) +
+        geom_histogram(alpha = 0.6, 
+                       breaks = seq(0, 100, by = 3),
+                       fill = "palegreen4") +
+        theme_niwot() +
+        scale_y_continuous(limits = c(0, 100), expand = expand_scale(mult = c(0, 0.1))))
+# the final line of code removes the empty blank space below the bars)
+
+ggsave(histogram3, filename = "Output/remove_sp_hist3.png",
+       height = 5, width = 5)
+
+# # Adding an outline around the whole histogram
+h <- hist(carex$hits, breaks = seq(0, 100, by = 3), plot = FALSE)
+d1 <- data.frame(x = h$breaks, y = c(h$counts, NA))  
+d1 <- rbind(c(0, 0), d1)
+
+# Moving data frame from main ggplot() call to specific part of graph where we 
+## want to use dataset 
+
+(histogram4 <- ggplot(carex, aes(x = hits)) +
+        geom_histogram(alpha = 0.6, 
+                       breaks = seq(0, 100, by = 3),
+                       fill = "palegreen4") +
+        theme_niwot() +
+        scale_y_continuous(limits = c(0, 100), expand = expand_scale(mult = c(0, 0.1))) +
+        # Adding the outline
+        geom_step(data = d1, aes(x = x, y = y),
+                  stat = "identity", colour = "seagreen4"))
+
+summary(d1) # ignore the warning message because some values don't have bars
+            ## thus there are missing "steps" along the geom_step path
+
+ggsave(histogram4, filename = "Output/diff_datafr_same_hist4.png",
+       height = 5, width = 5)
+
+# Adding line for mean number of hits plus annotations for readability 
+
+(histogram5 <- ggplot(carex, aes(x = hits)) +
+        geom_histogram(alpha = 0.6, 
+                       breaks = seq(0, 100, by = 3),
+                       fill = "palegreen4") +
+        theme_niwot() +
+        scale_y_continuous(limits = c(0, 100), expand = expand_scale(mult = c(0, 0.1))) +
+        geom_step(data = d1, aes(x = x, y = y),
+                  stat = "identity", colour = "palegreen4") +
+        geom_vline(xintercept = mean(carex$hits), linetype = "dotted",
+                   colour = "palegreen4", size = 1) +
+        # Adding in a text allocation - the coordinates are based on the x and y axes
+        annotate("text", x = 50, y = 50, label = "The mean number of\nCarex observations was 16.") +
+        # "\n" creates a line break
+        geom_curve(aes(x = 50, y = 60, xend = mean(carex$hits) + 2, yend = 60),
+                   arrow = arrow(length = unit(0.07, "inch")), size = 0.7,
+                   color = "grey30", curvature = 0.3) +
+        labs(x = "\nObservation hits", y = "Count\n"))
+# Similarly to the annotation, the curved line follows the plot's coordinates
+# Have a go at changing the curve parameters to see what happens
+
+ggsave(histogram5, filename = "Output/mean_hist5.png",
        height = 5, width = 5)
