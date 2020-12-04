@@ -1,6 +1,6 @@
 # Repository navigation
 
-## Weeks 1-2: Introduction to data scrience and version control
+## Weeks 1-2: Introduction to data science and version control
 - ### [Instructions](Week%2001-02/Instructions)  
 - ### [Notes](Week%2001-02/Notes)    
 - ### [Tutorials](Week%2001-02/Tutorials)    
